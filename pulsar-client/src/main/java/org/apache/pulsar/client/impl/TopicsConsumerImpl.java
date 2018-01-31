@@ -21,10 +21,10 @@ package org.apache.pulsar.client.impl;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,6 +38,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.ConsumerConfiguration;
 import org.apache.pulsar.client.api.Message;
@@ -48,10 +49,14 @@ import org.apache.pulsar.client.util.ConsumerName;
 import org.apache.pulsar.client.util.FutureUtil;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandAck.AckType;
 import org.apache.pulsar.common.naming.DestinationName;
+import org.apache.pulsar.common.naming.NamespaceName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TopicsConsumerImpl extends ConsumerBase {
+
+    // All topics should be in same namespace
+    protected final NamespaceName namespaceName;
 
     // Map <topic+partition, consumer>, when get do ACK, consumer will by find by topic name
     private final ConcurrentHashMap<String, ConsumerImpl> consumers;
@@ -86,7 +91,9 @@ public class TopicsConsumerImpl extends ConsumerBase {
             conf, Math.max(2, conf.getReceiverQueueSize()), listenerExecutor,
             subscribeFuture);
 
-        topics.forEach(topic -> checkArgument(DestinationName.isValid(topic), "Invalid topic name:" + topic));
+        this.namespaceName = DestinationName.get(topics.stream().findFirst().get()).getNamespaceObject();
+
+        checkArgument(!topicsNameInvalid(topics), "Topics should have same namespace " + this.namespaceName.toString());
 
         this.topics = new ConcurrentHashMap<>();
         this.consumers = new ConcurrentHashMap<>();
@@ -137,6 +144,35 @@ public class TopicsConsumerImpl extends ConsumerBase {
                 return null;
             })
         );
+    }
+
+    // Check topics are valid.
+    // - each topic is valid,
+    // - every topic has same namespace.
+    private static boolean topicsNameInvalid(Collection<String> topics) {
+        checkState(topics != null && topics.size() > 1,
+            "topics should should contain more than 1 topics");
+
+        final String namespace = DestinationName.get(topics.stream().findFirst().get()).getNamespace();
+
+        Optional<String> result = topics.stream()
+            .filter(topic -> {
+                boolean topicInvalid = !DestinationName.isValid(topic);
+                if (topicInvalid) {
+                    return true;
+                }
+
+                String newNamespace =  DestinationName.get(topic).getNamespace();
+                if (!namespace.equals(newNamespace)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }).findFirst();
+        if (result.isPresent()) {
+            log.warn("[{}] Received invalid topic name.  {}/{}", result.get());
+        }
+        return result.isPresent();
     }
 
     // add Consumer for all given topics when initiate.
