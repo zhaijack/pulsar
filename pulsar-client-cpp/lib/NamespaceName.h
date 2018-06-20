@@ -25,6 +25,7 @@
 #include <boost/shared_ptr.hpp>
 
 #pragma GCC visibility push(default)
+namespace pulsar {
 
 class NamespaceName : public ServiceUnitId {
    public:
@@ -35,6 +36,7 @@ class NamespaceName : public ServiceUnitId {
     static boost::shared_ptr<NamespaceName> get(const std::string& property, const std::string& cluster,
                                                 const std::string& namespaceName);
     bool operator==(const NamespaceName& namespaceName);
+    std::string toString();
 
    private:
     std::string namespace_;
@@ -46,6 +48,9 @@ class NamespaceName : public ServiceUnitId {
     NamespaceName(const std::string& property, const std::string& cluster, const std::string& namespace_);
 };
 
+typedef boost::shared_ptr<NamespaceName> NamespaceNamePtr;
+
+}  // namespace pulsar
 #pragma GCC visibility pop
 
 #endif
