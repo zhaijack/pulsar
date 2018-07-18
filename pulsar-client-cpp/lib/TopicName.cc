@@ -225,6 +225,6 @@ const std::string TopicName::getTopicPartitionName(unsigned int partition) {
     return topicPartitionName.str();
 }
 
-boost::shared_ptr<NamespaceName> TopicName::getNamespaceName() { return namespaceName_; }
+NamespaceNamePtr TopicName::getNamespaceName() { return namespaceName_; }
 
 }  // namespace pulsar
