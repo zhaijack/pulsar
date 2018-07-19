@@ -21,5 +21,7 @@
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleMock(&argc, argv);
+    // ::testing::GTEST_FLAG(filter) = "BasicEndToEndTest.*";
+
     return RUN_ALL_TESTS();
 }

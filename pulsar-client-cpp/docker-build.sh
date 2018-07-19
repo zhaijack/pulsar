@@ -33,12 +33,14 @@ IMAGE="$BUILD_IMAGE_NAME:$BUILD_IMAGE_VERSION"
 
 echo "---- Build Pulsar C++ client using image $IMAGE"
 
-docker pull $IMAGE
+#docker pull $IMAGE
 
 DOCKER_CMD="docker run -i -v $ROOT_DIR:/pulsar $IMAGE"
 
 # Remove any cached CMake relate file from previous builds
-find . -name CMakeCache.txt | xargs rm -f
-find . -name CMakeFiles | xargs rm -rf
+#find . -name CMakeCache.txt | xargs rm -f
+#find . -name CMakeFiles | xargs rm -rf
 
-$DOCKER_CMD bash -c "cd /pulsar/pulsar-client-cpp && cmake . $CMAKE_ARGS && make check-format && make"
+#$DOCKER_CMD bash -c "cd /pulsar/pulsar-client-cpp && cmake . $CMAKE_ARGS && make check-format && make"
+#$DOCKER_CMD bash -c "cd /pulsar/pulsar-client-cpp && make format && cmake . $CMAKE_ARGS && make check-format && make"
+$DOCKER_CMD bash -c "cd /pulsar/pulsar-client-cpp && make"

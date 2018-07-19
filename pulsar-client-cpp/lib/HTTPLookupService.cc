@@ -94,6 +94,27 @@ Future<Result, LookupDataResultPtr> HTTPLookupService::getPartitionMetadataAsync
     return promise.getFuture();
 }
 
+Future<Result, NamespaceTopicsPtr> HTTPLookupService::getTopicsOfNamespaceAsync(const NamespaceNamePtr &nsName) {
+    NamespaceTopicsPromisePtr promise = boost::make_shared<Promise<Result, NamespaceTopicsPtr>>();
+    std::stringstream completeUrlStream;
+    String format = namespace.isV2() ? "admin/v2/namespaces/%s/topics" : "admin/namespaces/%s/destinations";
+
+    if (nsName->isV2Topic()) {
+        completeUrlStream << adminUrl_ << ADMIN_PATH_V2 << "namespaces" << '/'
+                          << topicName->getProperty() << '/' << topicName->getNamespacePortion() << '/'
+                          << topicName->getEncodedLocalName() << '/' << PARTITION_METHOD_NAME;
+    } else {
+        completeUrlStream << adminUrl_ << ADMIN_PATH_V1 << topicName->getDomain() << '/'
+                          << topicName->getProperty() << '/' << topicName->getCluster() << '/'
+                          << topicName->getNamespacePortion() << '/' << topicName->getEncodedLocalName()
+                          << '/' << PARTITION_METHOD_NAME;
+    }
+
+    executorProvider_->get()->postWork(boost::bind(&HTTPLookupService::sendHTTPRequest, shared_from_this(),
+                                                   promise, completeUrlStream.str(), PartitionMetaData));
+    return promise.getFuture();
+}
+
 static size_t curlWriteCallback(void *contents, size_t size, size_t nmemb, void *responseDataPtr) {
     ((std::string *)responseDataPtr)->append((char *)contents, size * nmemb);
     return size * nmemb;

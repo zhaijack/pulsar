@@ -33,7 +33,7 @@ IMAGE="$BUILD_IMAGE_NAME:$BUILD_IMAGE_VERSION"
 
 echo "---- Testing Pulsar C++ client using image $IMAGE"
 
-docker pull $IMAGE
+#docker pull $IMAGE
 
 DOCKER_CMD="docker run -i -v $ROOT_DIR:/pulsar $IMAGE"
 
