@@ -166,6 +166,7 @@ flexible messaging model and an intuitive client API.</description>
     <rabbitmq-client.version>5.1.1</rabbitmq-client.version>
     <aws-sdk.version>1.11.297</aws-sdk.version>
     <avro.version>1.8.2</avro.version>
+    <debezium.version>0.8.1.Final</debezium.version>
 
     <!-- test dependencies -->
     <arquillian-cube.version>1.15.1</arquillian-cube.version>
@@ -322,6 +323,18 @@ flexible messaging model and an intuitive client API.</description>
             <groupId>org.slf4j</groupId>
           </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>io.debezium</groupId>
+        <artifactId>debezium-embedded</artifactId>
+        <version>${debezium.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.debezium</groupId>
+        <artifactId>debezium-connector-mysql</artifactId>
+        <version>${debezium.version}</version>
       </dependency>
 
       <dependency>
