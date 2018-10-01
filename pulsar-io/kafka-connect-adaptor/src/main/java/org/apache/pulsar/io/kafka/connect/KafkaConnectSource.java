@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import org.apache.kafka.connect.runtime.TaskConfig;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTask;
 import org.apache.kafka.connect.source.SourceTaskContext;
@@ -69,14 +70,21 @@ public class KafkaConnectSource implements Source<byte[]> {
 
         // TODO: initialize kafka source and context
 
-        // TODO: get the source class name from config and create source task from reflection
-        //       e.g. https://github.com/apache/kafka/blob/70d882861e1bf3eb503c84a31834e8b628de2df9/connect/runtime/src/main/java/org/apache/kafka/connect/runtime/Worker.java#L410
-        sourceTask = null;
+        // get the source class name from config and create source task from reflection
+        sourceTask = ((Class<? extends SourceTask>)config.get(TaskConfig.TASK_CLASS_CONFIG))
+            .asSubclass(SourceTask.class)
+            .getDeclaredConstructor()
+            .newInstance();
 
-        // TODO: initialize the key and value converter
-        //       e.g. https://github.com/apache/kafka/blob/70d882861e1bf3eb503c84a31834e8b628de2df9/connect/runtime/src/main/java/org/apache/kafka/connect/runtime/Worker.java#L433
-        keyConverter = null;
-        valueConverter = null;
+        // initialize the key and value converter
+        keyConverter = ((Class<? extends Converter>)config.get(PulsarKafkaWorkerConfig.KEY_CONVERTER_CLASS_CONFIG))
+            .asSubclass(Converter.class)
+            .getDeclaredConstructor()
+            .newInstance();
+        valueConverter = ((Class<? extends Converter>)config.get(PulsarKafkaWorkerConfig.VALUE_CONVERTER_CLASS_CONFIG))
+            .asSubclass(Converter.class)
+            .getDeclaredConstructor()
+            .newInstance();
 
         offsetStore = new PulsarOffsetBackingStore();
         offsetStore.configure(new PulsarKafkaWorkerConfig(stringConfig));
@@ -96,7 +104,6 @@ public class KafkaConnectSource implements Source<byte[]> {
         );
 
         sourceTaskContext = new PulsarIOSourceTaskContext(offsetReader);
-        offsetWriter = null;
 
         sourceTask.initialize(sourceTaskContext);
         sourceTask.start(stringConfig);
