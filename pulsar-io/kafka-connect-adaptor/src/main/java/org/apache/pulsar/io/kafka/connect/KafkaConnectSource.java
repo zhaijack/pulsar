@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.connect.runtime.TaskConfig;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTask;
@@ -43,10 +45,12 @@ import org.apache.pulsar.io.core.SourceContext;
 /**
  * A pulsar source that runs
  */
+@Slf4j
 public class KafkaConnectSource implements Source<byte[]> {
 
     // kafka connect related variables
     private SourceTaskContext sourceTaskContext;
+    @Getter
     private SourceTask sourceTask;
     private Converter keyConverter;
     private Converter valueConverter;
@@ -56,6 +60,7 @@ public class KafkaConnectSource implements Source<byte[]> {
     private CompletableFuture<Void> flushFuture;
     private OffsetBackingStore offsetStore;
     private OffsetStorageReader offsetReader;
+    @Getter
     private OffsetStorageWriter offsetWriter;
     private IdentityHashMap<SourceRecord, SourceRecord> outstandingRecords = new IdentityHashMap<>();
 
@@ -67,8 +72,6 @@ public class KafkaConnectSource implements Source<byte[]> {
                 stringConfig.put(key, (String) value);
             }
         });
-
-        // TODO: initialize kafka source and context
 
         // get the source class name from config and create source task from reflection
         sourceTask = ((Class<? extends SourceTask>)config.get(TaskConfig.TASK_CLASS_CONFIG))
